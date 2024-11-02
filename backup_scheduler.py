@@ -16,4 +16,4 @@ class BackupScheduler:
 
     def stop(self):
         if self.timer:
-            self.timer.cancel()
+            self.timer.cancel() 
