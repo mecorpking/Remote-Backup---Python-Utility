@@ -1,0 +1,46 @@
+name: Build and Release Windows EXE
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-release:
+    if: contains(github.event.head_commit.message, 'build')
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+      - name: Install dependencies
+        run: |
+          pip install pyinstaller
+          pip install -r requirements.txt
+      - name: Build EXE
+        run: pyinstaller --onefile --windowed main.py --icon=myicon.ico
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: dist
+          path: dist/main.exe
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        with:
+          tag_name: 'v1.0.${{ github.run_number }}'
+          release_name: 'Build Release - ${{ github.run_number }}'
+          body: 'Automatic release generated on push containing the word "build".'
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: dist/main.exe
+          asset_name: main.exe
+          asset_content_type: application/octet-stream
